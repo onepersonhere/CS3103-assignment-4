@@ -10,6 +10,7 @@ from email.mime.text import MIMEText
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
+
 def read_csv(file_path):
     recipients = []
     with open(file_path, mode='r') as file:
@@ -18,10 +19,12 @@ def read_csv(file_path):
             recipients.append(row)
     return recipients
 
+
 def replace_placeholders(body, name, department):
     body = re.sub(r"#name#", name, body)
     body = re.sub(r"#department#", department, body)
     return body
+
 
 def send_email(smtp_server, sender_email, recipient_email, subject, body):
     message = MIMEMultipart("alternative")
@@ -34,6 +37,7 @@ def send_email(smtp_server, sender_email, recipient_email, subject, body):
     message.attach(html_body)
 
     smtp_server.sendmail(sender_email, recipient_email, message.as_string())
+
 
 def smart_mailer(input_file, department_code, subject, body_file, sender_email, sender_password):
     # Read email data from CSV
@@ -49,7 +53,7 @@ def smart_mailer(input_file, department_code, subject, body_file, sender_email, 
     # Connect to SMTP server
     with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=context) as server:
         server.login(sender_email, sender_password)
-        
+
         count_by_department = {}
 
         for recipient in recipients:
@@ -71,11 +75,12 @@ def smart_mailer(input_file, department_code, subject, body_file, sender_email, 
                 time.sleep(2)  # Delay of 2 seconds to avoid spam detection
             except Exception as e:
                 print(f"Failed to send email to {recipient['email']}: {e}")
-    
+
     # Print the report
     print("\nEmails sent summary:")
     for dept, count in count_by_department.items():
         print(f"{dept}: {count} emails sent.")
+
 
 if __name__ == "__main__":
     import argparse
@@ -88,7 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--body", required=True, help="Path to email body HTML file")
     parser.add_argument("--sender_email", required=True, help="Sender's email")
     parser.add_argument("--sender_password", required=True, help="Sender's email password")
-    
+
     args = parser.parse_args()
 
     # Run the mailer
