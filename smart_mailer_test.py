@@ -2,33 +2,44 @@ import unittest
 from unittest.mock import patch, mock_open
 import smtplib  # Ensure you import smtplib
 
-class TestSimpleSMTP(unittest.TestCase):
 
-    @patch.object(smtplib.SMTP_SSL, 'sendmail')  # Patch the sendmail method
-    @patch("builtins.open", new_callable=mock_open, read_data="email,name\njohn@example.com,John Doe\n")  # Mock CSV data with one recipient
-    def test_send_email(self, mock_open, mock_sendmail):  # mock_open and mock_sendmail are passed as arguments
+def multi_mock_open(*file_contents):
+    """Create a mock "open" that will mock open multiple files in sequence
+    Args:
+        *file_contents ([str]): a list of file contents to be returned by open
+    Returns:
+        (MagicMock) a mock opener that will return the contents of the first
+            file when opened the first time, the second file when opened the
+            second time, etc.
+    """
+    mock_files = [mock_open(read_data=content).return_value for content in file_contents]
+    mock_opener = mock_open()
+    mock_opener.side_effect = mock_files
+
+    return mock_opener
+
+class TestSimpleSMTP(unittest.TestCase):
+    file_contents = [
+        "email,name\njohn@example.com,John Doe\n",
+        "Subject: Test\n\nEmail body"
+        ]
+
+    @patch("builtins.open", new_callable=lambda: multi_mock_open(*TestSimpleSMTP.file_contents))
+    @patch.object(smtplib.SMTP_SSL, 'sendmail')
+    def test_send_email(self, mock_sendmail, mock_open):
         print("Starting the test for sending email...")
 
-        # Mock the behavior of the sendmail method
-        mock_sendmail.return_value = None  # Set the return value of sendmail
+        from simple_smtp import send_email
 
-        # Import your function here to avoid circular imports
-        from simple_smtp import send_email  # Ensure this points to your actual send_email function
+        send_email()
 
-        # Act: Call the function that sends the email
-        send_email()  # This should invoke the sendmail method
-
-        # Assert that sendmail was called
         self.assertTrue(mock_sendmail.called, "sendmail was not called")
-
-        # Print the calls to sendmail for debugging
         print("Calls to sendmail:", mock_sendmail.call_args_list)
 
-        # Check the call parameters of sendmail
-        mock_sendmail.assert_called_once_with(  # Assert that sendmail was called with the correct parameters
+        mock_sendmail.assert_called_once_with(
             'from@example.com',
-            'john@example.com',  # Use the email from the mocked CSV
-            'Subject: Test\n\nEmail body'  # Adjust if your function has a different email body
+            'john@example.com',
+            'Subject: Test\n\nEmail body'
         )
         print("sendmail was called with expected parameters.")
 
