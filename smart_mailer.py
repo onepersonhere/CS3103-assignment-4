@@ -23,6 +23,8 @@ def read_csv(file_path):
 def replace_placeholders(body, name, department):
     body = re.sub(r"#name#", name, body)
     body = re.sub(r"#department#", department, body)
+    tracker_img = '<img src="https://cs3103-assignment-4.onrender.com/tracker.png" style="display:none;" />'
+    body += tracker_img
     return body
 
 
