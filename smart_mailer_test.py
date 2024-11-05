@@ -1,8 +1,14 @@
+import time
 import unittest
+from multiprocessing import Process
 from unittest.mock import patch, mock_open
 import smtplib  # Ensure you import smtplib
-from smart_mailer import smart_mailer
 
+import requests
+
+from smart_mailer import smart_mailer
+from unittest.mock import patch, mock_open
+from server import app
 
 def multi_mock_open(*file_contents):
     """Create a mock "open" that will mock open multiple files in sequence
@@ -19,8 +25,8 @@ def multi_mock_open(*file_contents):
 
     return mock_opener
 
-import unittest
-from unittest.mock import patch, MagicMock, mock_open
+def start_server():
+    app.run(port=5000)
 
 class TestSmartMailer(unittest.TestCase):
 
@@ -36,6 +42,21 @@ amy@example.com,Amy Green,Finance
 <img src="http://yourserver.com/tracker.png" alt="." width="1" height="1">
 </body>
 </html>"""]
+
+
+
+    @classmethod
+    def setUpClass(cls):
+        # Start the tracking server in a separate process
+        cls.server_process = Process(target=start_server)
+        cls.server_process.start()
+        time.sleep(1)  # Give the server time to start
+
+    @classmethod
+    def tearDownClass(cls):
+        # Stop the tracking server
+        cls.server_process.terminate()
+        cls.server_process.join()
 
     def setUp(self):
         # Mock data
@@ -109,7 +130,7 @@ amy@example.com,Amy Green,Finance
         self.assertIn("Hello Jane Smith", sent_email_content)
         self.assertIn("Welcome to the HR department update!", sent_email_content)
 
-    # please run server.py on localhost before running this test case
+    # Please run server.py on localhost before running this test case
     @patch("builtins.open", new_callable=lambda: multi_mock_open(*TestSmartMailer.file_contents))
     @patch.object(smtplib.SMTP_SSL, 'sendmail')
     @patch.dict('smart_mailer.__dict__', {"IMG_HOST": "http://localhost:5000/tracker.png"})
@@ -148,7 +169,7 @@ amy@example.com,Amy Green,Finance
 
     @patch("builtins.open", new_callable=lambda: multi_mock_open(*TestSmartMailer.file_contents))
     @patch.object(smtplib.SMTP_SSL, 'sendmail')
-    def test_report_prints_email_count_by_department(self, mock_smtp, mock_open):
+    def test_report_prints_email_count_by_department(self, mock_sendmail, mock_open):
         # Capture printed output
         with patch("builtins.print") as mock_print:
             smart_mailer(
@@ -165,6 +186,32 @@ amy@example.com,Amy Green,Finance
             self.assertIn("IT: 2 emails sent.", report_lines)
             self.assertIn("HR: 1 emails sent.", report_lines)
             self.assertIn("Finance: 1 emails sent.", report_lines)
+
+    @patch("builtins.open", new_callable=lambda: multi_mock_open(*TestSmartMailer.file_contents))
+    @patch.object(smtplib.SMTP_SSL, 'sendmail')
+    def test_tracking_pixel_count_api(self, mock_sendmail, mock_open):
+
+        # Send emails to all recipients
+        smart_mailer(
+            input_file="maildata.csv",
+            department_code="all",
+            subject=self.subject,
+            body_file="mail_body.html",
+            sender_email=self.sender_email,
+            sender_password=self.sender_password
+        )
+
+        # Simulate email opens by accessing the tracking pixel URL
+        pixel_url = "http://127.0.0.1:5000/tracker.png"
+        for _ in range(5):  # Simulate 5 email opens
+            res = requests.get(pixel_url)
+            print(res)
+
+        # Check the /count API for correct count increment
+        response = requests.get("http://127.0.0.1:5000/count")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["count"], 5, "The tracking count should be 5")
+
 
 if __name__ == "__main__":
     unittest.main()
