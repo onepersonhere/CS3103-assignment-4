@@ -1,7 +1,7 @@
 import time
 import unittest
 from multiprocessing import Process
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open
 import smtplib  # Ensure you import smtplib
 
 import requests
@@ -41,7 +41,7 @@ amy@example.com,Amy Green,Finance
 <body>
 <h1>Hello #name#,</h1>
 <p>Welcome to the #department# department update!</p>
-<img src="http://yourserver.com/tracker.png" alt="." width="1" height="1">
+<img src="http://localhost:5000/tracker.png" alt="." width="1" height="1">
 </body>
 </html>"""]
 
