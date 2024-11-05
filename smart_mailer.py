@@ -5,11 +5,12 @@ import ssl
 import re
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import argparse
 
 # SMTP setup (e.g., Gmail)
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
-
+IMG_HOST="https://cs3103-assignment-4.onrender.com/tracker.png"
 
 def read_csv(file_path):
     recipients = []
@@ -23,7 +24,7 @@ def read_csv(file_path):
 def replace_placeholders(body, name, department):
     body = re.sub(r"#name#", name, body)
     body = re.sub(r"#department#", department, body)
-    tracker_img = '<img src="https://cs3103-assignment-4.onrender.com/tracker.png" style="display:none;" />'
+    tracker_img = f'<img src="{IMG_HOST}" style="display:none;" />'
     body += tracker_img
     return body
 
@@ -85,8 +86,6 @@ def smart_mailer(input_file, department_code, subject, body_file, sender_email, 
 
 
 if __name__ == "__main__":
-    import argparse
-
     # Argument parsing
     parser = argparse.ArgumentParser(description="Smart Mailer Program")
     parser.add_argument("--csv", required=True, help="Path to input CSV file")

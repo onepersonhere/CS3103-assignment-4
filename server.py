@@ -1,4 +1,4 @@
-from flask import Flask, send_file
+from flask import Flask, send_file, request
 import os
 
 app = Flask(__name__)
@@ -17,12 +17,15 @@ def tracker():
 def count():
     return f"Emails opened: {counter}"
 
-
-if __name__ == "__main__":
+def main():
     # Ensure tracker.png exists (a transparent 1x1 PNG image)
     if not os.path.exists('tracker.png'):
         with open('tracker.png', 'wb') as f:
             f.write(
                 b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\xdac\xf8\x0f\x00\x01\x01\x01\x00\x18\xdd\xbb\xcb\x00\x00\x00\x00IEND\xaeB`\x82')
 
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=5000)
+
+if __name__ == "__main__":
+    main()
+
