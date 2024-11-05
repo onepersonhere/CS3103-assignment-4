@@ -10,6 +10,7 @@ from smart_mailer import smart_mailer
 from unittest.mock import patch, mock_open
 from server import app
 
+
 def multi_mock_open(*file_contents):
     """Create a mock "open" that will mock open multiple files in sequence
     Args:
@@ -25,11 +26,12 @@ def multi_mock_open(*file_contents):
 
     return mock_opener
 
+
 def start_server():
     app.run(port=5000)
 
-class TestSmartMailer(unittest.TestCase):
 
+class TestSmartMailer(unittest.TestCase):
     file_contents = ["""email,name,department_code
 john@example.com,John Doe,IT
 jane@example.com,Jane Smith,HR
@@ -42,8 +44,6 @@ amy@example.com,Amy Green,Finance
 <img src="http://yourserver.com/tracker.png" alt="." width="1" height="1">
 </body>
 </html>"""]
-
-
 
     @classmethod
     def setUpClass(cls):
@@ -61,8 +61,8 @@ amy@example.com,Amy Green,Finance
     def setUp(self):
         # Mock data
         self.subject = "Department Update"
-        self.sender_email = "wertkwh@gmail.com"
-        self.sender_password = "vjctutvxuqrwtarr"
+        self.sender_email = "wertkwh@gmail.com"  # add your own email
+        self.sender_password = "vjctutvxuqrwtarr"  # add your own password
 
     @patch("builtins.open", new_callable=lambda: multi_mock_open(*TestSmartMailer.file_contents))
     @patch.object(smtplib.SMTP_SSL, 'sendmail')
@@ -215,4 +215,3 @@ amy@example.com,Amy Green,Finance
 
 if __name__ == "__main__":
     unittest.main()
-
